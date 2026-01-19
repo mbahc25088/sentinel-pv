@@ -1,28 +1,40 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-import os
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.engine import Engine
+from app.config import get_settings
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL must be set")
-
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,
-)
-
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine,
-)
-
-Base = declarative_base()
+_ENGINE: Engine | None = None
+_SessionLocal: sessionmaker | None = None
 
 
-def get_db():
-    db = SessionLocal()
+def init_engine() -> None:
+    global _ENGINE, _SessionLocal
+    settings = get_settings()
+
+    _ENGINE = create_engine(
+        settings.DATABASE_URL,
+        pool_pre_ping=True,
+        future=True,
+    )
+    _SessionLocal = sessionmaker(
+        bind=_ENGINE,
+        autoflush=False,
+        autocommit=False,
+        future=True,
+    )
+
+
+def shutdown_engine() -> None:
+    global _ENGINE
+    if _ENGINE:
+        _ENGINE.dispose()
+        _ENGINE = None
+
+
+def get_session():
+    if _SessionLocal is None:
+        raise RuntimeError("Database engine not initialized")
+    db = _SessionLocal()
     try:
         yield db
     finally:
