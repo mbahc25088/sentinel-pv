@@ -1,35 +1,34 @@
 from fastapi import FastAPI
-from app.lifecycle import get_lifecycle_state
-from app.config import CONFIG
 
+from app.lifecycle import (
+    startup_event,
+    shutdown_event,
+    get_lifecycle_state,
+)
+from app.config import get_settings
+
+settings = get_settings()
 
 app = FastAPI(
-    title=CONFIG.service_name,
-    debug=CONFIG.debug,
+    title=settings.APP_NAME,
+    version="0.1.0",
 )
 
 
-@app.get("/health", tags=["system"])
-def health():
+@app.on_event("startup")
+async def _startup():
+    await startup_event()
+
+
+@app.on_event("shutdown")
+async def _shutdown():
+    await shutdown_event()
+
+
+@app.get("/")
+def root():
     return {
-        "status": "ok",
-        "service": CONFIG.service_name,
-        "version": CONFIG.version,
-        "environment": CONFIG.environment,
+        "service": settings.APP_NAME,
+        "environment": settings.APP_ENV,
         "lifecycle": get_lifecycle_state(),
-    }
-
-
-@app.get("/config", tags=["system"])
-def config_snapshot():
-    """
-    Read-only configuration snapshot.
-    Safe for diagnostics.
-    """
-    return {
-        "service_name": CONFIG.service_name,
-        "environment": CONFIG.environment,
-        "version": CONFIG.version,
-        "debug": CONFIG.debug,
-        "allowed_origins": CONFIG.allowed_origins,
     }

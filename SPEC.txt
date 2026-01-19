@@ -1,14 +1,28 @@
-VERSION DOOM — SINGLE SOURCE OF TRUTH
-====================================
+VERSION DOOM — AUTHORITATIVE SPEC
+=================================
 
-This file is authoritative.
-Code is judged against this file, not memory.
+Project: sentinel-pv
+Version: VERSION DOOM
+Status: Phase 1 COMPLETE AND LOCKED
+Last Verified State: Docker + FastAPI + PostgreSQL running successfully
 
---------------------------------------------------
-PHASE 0 — CONTRACT & INVARIANTS (LOCKED)
---------------------------------------------------
+------------------------------------------------------------
+GLOBAL RULES (HARD LOCK)
+------------------------------------------------------------
 
-Backend structure (LOCKED):
+1. SPEC.txt is the single source of truth.
+2. Code is judged against SPEC.txt, never against memory.
+3. Any file change requires FULL FILE REPLACEMENT.
+4. No renames, no path changes unless explicitly unlocked.
+5. Docker is the only supported execution environment.
+6. PostgreSQL is the sole system of record.
+7. Human-in-the-loop is mandatory; no autonomous regulatory decisions.
+8. Frontend must consume backend contracts exactly when introduced.
+9. Phase once locked may not be reinterpreted.
+
+------------------------------------------------------------
+PROJECT TREE (FROZEN FOR PHASE 1)
+------------------------------------------------------------
 
 sentinel-pv/
 ├── docker-compose.yml
@@ -19,60 +33,161 @@ sentinel-pv/
     └── app/
         ├── __init__.py
         ├── main.py
-        └── lifecycle.py
+        ├── lifecycle.py
+        ├── config.py
+        └── invariants.py
 
-Rules:
-- lifecycle.py name is IMMUTABLE
-- Postgres will be sole system of record (later phase)
-- No automated regulatory decisions
-- Human-in-the-loop mandatory
+------------------------------------------------------------
+DOCKER ORCHESTRATION
+------------------------------------------------------------
 
---------------------------------------------------
-PHASE 1 — RUNTIME & LIFECYCLE
---------------------------------------------------
-
-SUBSECTION 1.1 — Runtime Bootstrap (LOCKED)
-- FastAPI base
-- Uvicorn entry
-- Health endpoint
-- lifecycle.py introduced
-
-SUBSECTION 1.2 — Lifecycle State Gate (LOCKED)
-- Deterministic lifecycle states
-- Explicit state transitions
-- No side effects
-
-SUBSECTION 1.3 — Configuration Spine (ACTIVE)
----------------------------------------------
-
-Files:
-- backend/app/config.py (NEW)
-- backend/app/main.py (UPDATED)
+docker-compose.yml
 
 Responsibilities:
+- Orchestrate backend and PostgreSQL
+- Define environment variables
+- Create persistent volume for Postgres
+- Enforce startup ordering
 
-config.py:
-- Single source of truth for environment configuration
-- Immutable dataclass (frozen)
-- No I/O
-- No runtime mutation
-- Imported by main.py only
+Services:
+- sentinel-pv-backend (FastAPI + Uvicorn)
+- sentinel-pv-postgres (PostgreSQL 15)
 
-main.py:
-- Reads configuration from CONFIG
-- Exposes /config diagnostic endpoint
-- Exposes /health with lifecycle + config metadata
-- MUST NOT mutate CONFIG
+Guarantees:
+- Backend will not start without Postgres availability
+- Database data persists across container restarts
+- All services run on an isolated Docker network
 
-Invariants:
-- Configuration is read-only after process start
-- No environment-dependent logic outside config.py
-- No file other than config.py may read os.environ directly
+------------------------------------------------------------
+BACKEND CONTAINER
+------------------------------------------------------------
 
-LOCK RULE:
-- Any future change to config requires FULL FILE REPLACEMENT
-- Any rename or relocation requires explicit unlock
+backend/Dockerfile
 
---------------------------------------------------
+Responsibilities:
+- Define Python 3.11 runtime
+- Install dependencies from requirements.txt
+- Set PYTHONPATH=/app
+- Launch FastAPI via Uvicorn
+
+Critical Invariants:
+- Build context is repository root
+- backend/app is copied into /app
+- No dynamic path manipulation allowed
+
+------------------------------------------------------------
+APPLICATION LAYER
+------------------------------------------------------------
+
+app/main.py
+
+Role:
+- Single FastAPI entrypoint
+- Registers startup and shutdown hooks
+- Exposes root inspection endpoint
+
+Startup Flow:
+1. FastAPI instance is created
+2. startup_event() is awaited
+3. Runtime invariants are asserted
+4. Application becomes available
+
+Shutdown Flow:
+- shutdown_event() is awaited for clean teardown
+
+Public Endpoint:
+GET /
+Returns:
+- service name
+- environment
+- lifecycle state
+
+------------------------------------------------------------
+
+app/lifecycle.py
+
+Role:
+- Owns the system lifecycle state machine
+
+Responsibilities:
+- Track lifecycle state
+- Enforce valid transitions
+- Coordinate startup and shutdown
+- Invoke invariant enforcement
+
+Lifecycle States (implicit, internal):
+- INIT
+- RUNNING
+- SHUTTING_DOWN
+
+Lifecycle is authoritative and may not be bypassed.
+
+------------------------------------------------------------
+
+app/config.py
+
+Role:
+- Central configuration spine
+
+Responsibilities:
+- Load environment variables
+- Provide typed configuration access
+- Isolate configuration from business logic
+
+Constraints:
+- Compatible with Pydantic v2
+- No hardcoded secrets
+- No runtime mutation of config
+
+------------------------------------------------------------
+
+app/invariants.py
+
+Role:
+- Runtime safety enforcement
+
+Responsibilities:
+- Validate required environment variables
+- Enforce one-of requirements
+- Abort startup on misconfiguration
+
+Failure Mode:
+- Raises InvariantViolation
+- Application startup is aborted intentionally
+
+------------------------------------------------------------
+DATA LAYER (INFRASTRUCTURE ONLY — PHASE 1)
+------------------------------------------------------------
+
+PostgreSQL:
+- Version: 15.x
+- Managed via Docker
+- Persistent volume: sentinel-pv_pgdata
+- Authentication: trust (development only)
+
+Notes:
+- No schemas defined yet
+- No migrations yet
+- This is intentional and locked for Phase 1
+
+------------------------------------------------------------
+PHASE STATUS
+------------------------------------------------------------
+
+Phase 1 — Runtime & Lifecycle Foundation
+
+Subsections:
+- 1.1 Runtime spine
+- 1.2 Dockerization
+- 1.3 Lifecycle engine
+- 1.4 Configuration spine
+- 1.5 Invariants and safety gates
+- 1.6 PostgreSQL wiring
+
+Status:
+- Phase 1 COMPLETE
+- Phase 1 LOCKED
+
+------------------------------------------------------------
 END OF SPEC
---------------------------------------------------
+------------------------------------------------------------
