@@ -1,111 +1,78 @@
-VERSION DOOM — SPEC.txt
+VERSION DOOM — SINGLE SOURCE OF TRUTH
+====================================
 
-PHASE 0 — CONTRACT & INVARIANTS
-STATUS: LOCKED
+This file is authoritative.
+Code is judged against this file, not memory.
 
-This SPEC.txt is the single source of truth for the entire project.
-All code, files, schemas, and behavior are judged against this document.
+--------------------------------------------------
+PHASE 0 — CONTRACT & INVARIANTS (LOCKED)
+--------------------------------------------------
 
-========================
-GLOBAL PROJECT INVARIANTS
-========================
+Backend structure (LOCKED):
 
-- Scope: FULL from day one. No MVP reduction.
-- Depth target: 1000× behavioral depth via dense logic.
-- No placeholders, stubs, or TODO logic.
-- No MedDRA dependency; internal ontology only.
-- Human-in-the-loop mandatory for all regulatory decisions.
+sentinel-pv/
+├── docker-compose.yml
+├── SPEC.txt
+└── backend/
+    ├── Dockerfile
+    ├── requirements.txt
+    └── app/
+        ├── __init__.py
+        ├── main.py
+        └── lifecycle.py
 
-========================
-FILE CHANGE RULE
-========================
+Rules:
+- lifecycle.py name is IMMUTABLE
+- Postgres will be sole system of record (later phase)
+- No automated regulatory decisions
+- Human-in-the-loop mandatory
 
-- ANY file change requires FULL FILE REPLACEMENT.
-- No partial snippets or diffs allowed.
-- Filenames and paths are immutable once locked.
+--------------------------------------------------
+PHASE 1 — RUNTIME & LIFECYCLE
+--------------------------------------------------
 
-========================
-SPEC GOVERNANCE
-========================
+SUBSECTION 1.1 — Runtime Bootstrap (LOCKED)
+- FastAPI base
+- Uvicorn entry
+- Health endpoint
+- lifecycle.py introduced
 
-- SPEC.txt is authoritative.
-- Updated after every phase AND every subsection.
-- Must include:
-  - Phase number and lock status
-  - Exact frozen file tree
-  - Per-file purpose and responsibilities
-  - Line-level intent summaries
-  - Contracts (inputs/outputs/invariants)
-  - What changed vs previous phase
+SUBSECTION 1.2 — Lifecycle State Gate (LOCKED)
+- Deterministic lifecycle states
+- Explicit state transitions
+- No side effects
 
-========================
-TECH STACK (LOCKED)
-========================
+SUBSECTION 1.3 — Configuration Spine (ACTIVE)
+---------------------------------------------
 
-Backend:
-- Python
-- FastAPI
-- PostgreSQL (single system of record)
-- SQLAlchemy
-- Docker + docker-compose
+Files:
+- backend/app/config.py (NEW)
+- backend/app/main.py (UPDATED)
 
-Frontend:
-- React + TypeScript
-- Dark-mode first
-- Strict backend contract consumption
+Responsibilities:
 
-========================
-PRIMARY LIFECYCLE GATE
-========================
+config.py:
+- Single source of truth for environment configuration
+- Immutable dataclass (frozen)
+- No I/O
+- No runtime mutation
+- Imported by main.py only
 
-INIT → OBSERVE → ANALYZE → GOVERNED → EXPORTABLE
+main.py:
+- Reads configuration from CONFIG
+- Exposes /config diagnostic endpoint
+- Exposes /health with lifecycle + config metadata
+- MUST NOT mutate CONFIG
 
-- Signals cannot skip states.
-- Gate enforced across DB, API, UI, audit.
+Invariants:
+- Configuration is read-only after process start
+- No environment-dependent logic outside config.py
+- No file other than config.py may read os.environ directly
 
-========================
-PHASE STRUCTURE (LOCKED)
-========================
+LOCK RULE:
+- Any future change to config requires FULL FILE REPLACEMENT
+- Any rename or relocation requires explicit unlock
 
-Total Phases: 15
-Total Subsections: 84
-
-Phase Breakdown:
-0: 4
-1: 6
-2: 6
-3: 7
-4: 7
-5: 7
-6: 7
-7: 7
-8: 6
-9: 5
-10: 5
-11: 5
-12: 4
-13: 4
-14: 4
-
-========================
-DELIVERY & VERIFICATION
-========================
-
-- Delivery model: Option A only.
-- Assistant delivers code.
-- User uploads full project ZIP after each phase.
-- Assistant verifies every file and every line against SPEC.
-
-========================
-EMOTIONAL CONSTRAINT
-========================
-
-Project failure causes significant emotional distress.
-Reliability and alignment are hard constraints.
-
-========================
-PHASE 0 — LOCK CONFIRMATION
-========================
-
-Phase 0 is LOCKED.
-No future phase may violate these rules unless explicitly unlocked by the user.
+--------------------------------------------------
+END OF SPEC
+--------------------------------------------------
