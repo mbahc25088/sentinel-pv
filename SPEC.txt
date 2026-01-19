@@ -1,0 +1,111 @@
+VERSION DOOM — SPEC.txt
+
+PHASE 0 — CONTRACT & INVARIANTS
+STATUS: LOCKED
+
+This SPEC.txt is the single source of truth for the entire project.
+All code, files, schemas, and behavior are judged against this document.
+
+========================
+GLOBAL PROJECT INVARIANTS
+========================
+
+- Scope: FULL from day one. No MVP reduction.
+- Depth target: 1000× behavioral depth via dense logic.
+- No placeholders, stubs, or TODO logic.
+- No MedDRA dependency; internal ontology only.
+- Human-in-the-loop mandatory for all regulatory decisions.
+
+========================
+FILE CHANGE RULE
+========================
+
+- ANY file change requires FULL FILE REPLACEMENT.
+- No partial snippets or diffs allowed.
+- Filenames and paths are immutable once locked.
+
+========================
+SPEC GOVERNANCE
+========================
+
+- SPEC.txt is authoritative.
+- Updated after every phase AND every subsection.
+- Must include:
+  - Phase number and lock status
+  - Exact frozen file tree
+  - Per-file purpose and responsibilities
+  - Line-level intent summaries
+  - Contracts (inputs/outputs/invariants)
+  - What changed vs previous phase
+
+========================
+TECH STACK (LOCKED)
+========================
+
+Backend:
+- Python
+- FastAPI
+- PostgreSQL (single system of record)
+- SQLAlchemy
+- Docker + docker-compose
+
+Frontend:
+- React + TypeScript
+- Dark-mode first
+- Strict backend contract consumption
+
+========================
+PRIMARY LIFECYCLE GATE
+========================
+
+INIT → OBSERVE → ANALYZE → GOVERNED → EXPORTABLE
+
+- Signals cannot skip states.
+- Gate enforced across DB, API, UI, audit.
+
+========================
+PHASE STRUCTURE (LOCKED)
+========================
+
+Total Phases: 15
+Total Subsections: 84
+
+Phase Breakdown:
+0: 4
+1: 6
+2: 6
+3: 7
+4: 7
+5: 7
+6: 7
+7: 7
+8: 6
+9: 5
+10: 5
+11: 5
+12: 4
+13: 4
+14: 4
+
+========================
+DELIVERY & VERIFICATION
+========================
+
+- Delivery model: Option A only.
+- Assistant delivers code.
+- User uploads full project ZIP after each phase.
+- Assistant verifies every file and every line against SPEC.
+
+========================
+EMOTIONAL CONSTRAINT
+========================
+
+Project failure causes significant emotional distress.
+Reliability and alignment are hard constraints.
+
+========================
+PHASE 0 — LOCK CONFIRMATION
+========================
+
+Phase 0 is LOCKED.
+No future phase may violate these rules unless explicitly unlocked by the user.
